@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="hr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Raspored Čišćenja Snijega</title>
+    <link rel="icon" href="https://cdn-icons-png.flaticon.com/512/642/642000.png" type="image/png">
+    <style>
+        * {
+            box-sizing: border-box;
+            font-family: Arial, sans-serif;
+        }
+
+        body {
+            margin: 0;
+            padding: 20px;
+            background-color: #f0f4f8;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            text-align: center;
+            color: #2c5282;
+            margin-bottom: 30px;
+        }
+
+        .input-section {
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+        }
+
+        .input-section h2 {
+            margin-top: 0;
+            color: #4a5568;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #4a5568;
+        }
+
+        input[type="text"], select {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #e2e8f0;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+
+        input[type="text"]:focus, select:focus {
+            outline: none;
+            border-color: #4299e1;
+        }
+
+        .tenant-inputs {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .tenant-input {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .tenant-input span {
+            min-width: 30px;
+            font-weight: bold;
+            color: #718096;
+        }
+
+        .btn {
+            padding: 12px 25px;
+            font-size: 16px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-right: 10px;
+            margin-bottom: 10px;
+        }
+
+        .btn-primary {
+            background-color: #4299e1;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: #3182ce;
+        }
+
+        .btn-success {
+            background-color: #48bb78;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background-color: #38a169;
+        }
+
+        .btn-secondary {
+            background-color: #718096;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background-color: #4a5568;
+        }
+
+        /* Print styles */
+        .schedule-output {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            display: none;
+        }
+
+        .schedule-output.visible {
+            display: block;
+        }
+
+        .schedule-title {
+            text-align: center;
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 5px;
+            text-transform: uppercase;
+        }
+
+        .schedule-subtitle {
+            text-align: center;
+            font-size: 16px;
+            margin-bottom: 20px;
+        }
+
+        .schedule-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12px;
+        }
+
+        .schedule-table th, .schedule-table td {
+            border: 1px solid #333;
+            padding: 6px 4px;
+            text-align: center;
+        }
+
+        .schedule-table th {
+            background-color: #e2e8f0;
+            font-weight: bold;
+        }
+
+        .schedule-table .name-col {
+            text-align: left;
+            padding-left: 8px;
+            font-weight: bold;
+        }
+
+        .schedule-table .row-num {
+            width: 30px;
+            font-weight: bold;
+        }
+
+        .schedule-table .name-header {
+            text-align: left;
+            padding-left: 8px;
+        }
+
+        .schedule-table tbody tr:nth-child(even) {
+            background-color: #f7fafc;
+        }
+
+        .month-header {
+            background-color: #bee3f8 !important;
+        }
+
+        /* Print-specific styles */
+        @media print {
+            body {
+                background: white;
+                padding: 10px;
+            }
+
+            .input-section, .btn, h1 {
+                display: none !important;
+            }
+
+            .schedule-output {
+                box-shadow: none;
+                padding: 0;
+            }
+
+            .schedule-table {
+                font-size: 11px;
+            }
+
+            .schedule-table th, .schedule-table td {
+                padding: 4px 3px;
+            }
+
+            @page {
+                size: landscape;
+                margin: 1cm;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>❄️ Generator Rasporeda Čišćenja Snijega ❄️</h1>
+
+        <div class="input-section">
+            <h2>Postavke</h2>
+            
+            <div class="form-group">
+                <label for="yearStart">Godina (početak sezone):</label>
+                <select id="yearStart">
+                    <script>
+                        const currentYear = new Date().getFullYear();
+                        for (let y = currentYear - 1; y <= currentYear + 10; y++) {
+                            document.write(`<option value="${y}" ${y === currentYear ? 'selected' : ''}>${y}/${y+1}</option>`);
+                        }
+                    </script>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="tenantCount">Broj stanara:</label>
+                <select id="tenantCount">
+                    <option value="5">5</option>
+                    <option value="6">6</option>
+                    <option value="7">7</option>
+                    <option value="8">8</option>
+                    <option value="9">9</option>
+                    <option value="10">10</option>
+                    <option value="11" selected>11</option>
+                    <option value="12">12</option>
+                    <option value="13">13</option>
+                    <option value="14">14</option>
+                    <option value="15">15</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>Imena stanara (prezimena ili brojevi stanova):</label>
+                <div class="tenant-inputs" id="tenantInputs">
+                    <!-- Generated by JavaScript -->
+                </div>
+            </div>
+
+            <button class="btn btn-primary" onclick="generateSchedule()">📅 Generiraj Raspored</button>
+            <button class="btn btn-success" onclick="window.print()">🖨️ Ispiši</button>
+            <button class="btn btn-secondary" onclick="clearAll()">🗑️ Obriši Sve</button>
+        </div>
+
+        <div class="schedule-output" id="scheduleOutput">
+            <!-- Generated schedule will appear here -->
+        </div>
+    </div>
+
+    <script>
+        const croatianMonths = {
+            11: 'STUDENI',
+            12: 'PROSINAC',
+            1: 'SIJEČANJ',
+            2: 'VELJAČA',
+            3: 'OŽUJAK',
+            4: 'TRAVANJ'
+        };
+
+        // Default tenant names - empty for privacy (publicly hosted)
+        const defaultTenants = [];
+
+        function generateTenantInputs() {
+            const count = parseInt(document.getElementById('tenantCount').value);
+            const container = document.getElementById('tenantInputs');
+            container.innerHTML = '';
+
+            for (let i = 0; i < count; i++) {
+                const div = document.createElement('div');
+                div.className = 'tenant-input';
+                div.innerHTML = `
+                    <span>${i + 1}.</span>
+                    <input type="text" id="tenant${i}" placeholder="Stanar ${i + 1}" 
+                           value="">
+                `;
+                container.appendChild(div);
+            }
+        }
+
+        function getDaysInMonth(year, month) {
+            // JavaScript months are 0-indexed, so we use month directly (not month-1)
+            // to get the last day of the target month
+            return new Date(year, month, 0).getDate();
+        }
+
+        function generateSchedule() {
+            const yearStart = parseInt(document.getElementById('yearStart').value);
+            const tenantCount = parseInt(document.getElementById('tenantCount').value);
+            
+            // Get tenant names
+            const tenants = [];
+            for (let i = 0; i < tenantCount; i++) {
+                const name = document.getElementById(`tenant${i}`).value.trim().toUpperCase();
+                tenants.push(name || `STANAR ${i + 1}`);
+            }
+
+            // Define the months for the snow season
+            const months = [
+                { month: 11, year: yearStart },      // November
+                { month: 12, year: yearStart },      // December
+                { month: 1, year: yearStart + 1 },   // January
+                { month: 2, year: yearStart + 1 },   // February
+                { month: 3, year: yearStart + 1 },   // March
+                { month: 4, year: yearStart + 1 }    // April
+            ];
+
+            // Calculate assignments for each tenant for each month
+            const schedule = [];
+            let dayCounter = 1;
+
+            for (let i = 0; i < tenants.length; i++) {
+                const tenantSchedule = { name: tenants[i], months: {} };
+                
+                for (const m of months) {
+                    tenantSchedule.months[`${m.year}-${m.month}`] = [];
+                }
+                
+                schedule.push(tenantSchedule);
+            }
+
+            // Assign days rotating through tenants
+            for (const m of months) {
+                const daysInMonth = getDaysInMonth(m.year, m.month);
+                const monthKey = `${m.year}-${m.month}`;
+                
+                for (let day = 1; day <= daysInMonth; day++) {
+                    const tenantIndex = (dayCounter - 1) % tenants.length;
+                    schedule[tenantIndex].months[monthKey].push(day);
+                    dayCounter++;
+                }
+            }
+
+            // Generate HTML table
+            let html = `
+                <div class="schedule-title">RASPORED STANARA ZA ČIŠĆENJE SNIJEGA</div>
+                <div class="schedule-subtitle">${yearStart}. - ${yearStart + 1}.</div>
+                <table class="schedule-table">
+                    <thead>
+                        <tr>
+                            <th class="row-num">R.BR.</th>
+                            <th class="name-header">IME I PREZIME</th>
+                            <th class="month-header">${croatianMonths[11]}<br>${yearStart}</th>
+                            <th class="month-header">${croatianMonths[12]}<br>${yearStart}</th>
+                            <th class="month-header">${croatianMonths[1]}<br>${yearStart + 1}</th>
+                            <th class="month-header">${croatianMonths[2]}<br>${yearStart + 1}</th>
+                            <th class="month-header">${croatianMonths[3]}<br>${yearStart + 1}</th>
+                            <th class="month-header">${croatianMonths[4]}<br>${yearStart + 1}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+
+            for (let i = 0; i < schedule.length; i++) {
+                const tenant = schedule[i];
+                html += `<tr>
+                    <td class="row-num">${i + 1}.</td>
+                    <td class="name-col">${tenant.name}</td>`;
+                
+                for (const m of months) {
+                    const monthKey = `${m.year}-${m.month}`;
+                    const days = tenant.months[monthKey];
+                    // Format days nicely, showing ranges or individual days
+                    const formattedDays = formatDays(days);
+                    html += `<td>${formattedDays}</td>`;
+                }
+                
+                html += '</tr>';
+            }
+
+            html += '</tbody></table>';
+
+            const output = document.getElementById('scheduleOutput');
+            output.innerHTML = html;
+            output.classList.add('visible');
+        }
+
+        function formatDays(days) {
+            if (!days || days.length === 0) return '-';
+            
+            // Just list the days separated by commas, with line breaks every few numbers
+            const parts = [];
+            for (let i = 0; i < days.length; i += 3) {
+                parts.push(days.slice(i, i + 3).join(', '));
+            }
+            return parts.join('<br>');
+        }
+
+        function clearAll() {
+            const count = parseInt(document.getElementById('tenantCount').value);
+            for (let i = 0; i < count; i++) {
+                const input = document.getElementById(`tenant${i}`);
+                if (input) input.value = '';
+            }
+            document.getElementById('scheduleOutput').classList.remove('visible');
+            document.getElementById('scheduleOutput').innerHTML = '';
+        }
+
+        // Initialize
+        document.getElementById('tenantCount').addEventListener('change', generateTenantInputs);
+        generateTenantInputs();
+    </script>
+</body>
+</html>

@@ -193,7 +193,8 @@
         @media print {
             body {
                 background: white;
-                padding: 10px;
+                padding: 5mm;
+                margin: 0;
             }
 
             .input-section, .btn, h1 {
@@ -203,19 +204,39 @@
             .schedule-output {
                 box-shadow: none;
                 padding: 0;
+                display: block !important;
+            }
+
+            .schedule-title {
+                font-size: 24px;
+                margin-bottom: 10px;
+            }
+
+            .schedule-subtitle {
+                font-size: 20px;
+                margin-bottom: 15px;
             }
 
             .schedule-table {
-                font-size: 11px;
+                font-size: 14px;
+                width: 100%;
             }
 
             .schedule-table th, .schedule-table td {
-                padding: 4px 3px;
+                padding: 8px 6px;
+            }
+
+            .schedule-table th {
+                font-size: 13px;
+            }
+
+            .schedule-table .name-col {
+                font-size: 14px;
             }
 
             @page {
                 size: landscape;
-                margin: 1cm;
+                margin: 10mm;
             }
         }
     </style>
@@ -263,8 +284,7 @@
                 </div>
             </div>
 
-            <button class="btn btn-primary" onclick="generateSchedule()">📅 Generiraj Raspored</button>
-            <button class="btn btn-success" onclick="window.print()">🖨️ Ispiši</button>
+            <button class="btn btn-success" onclick="printSchedule()">🖨️ Ispiši</button>
             <button class="btn btn-secondary" onclick="clearAll()">🗑️ Obriši Sve</button>
         </div>
 
@@ -421,9 +441,46 @@
             document.getElementById('scheduleOutput').innerHTML = '';
         }
 
+        function printSchedule() {
+            // Auto-generate schedule before printing
+            generateSchedule();
+            // Small delay to ensure DOM is updated, then print
+            setTimeout(() => {
+                window.print();
+            }, 100);
+        }
+
+        // Auto-generate when any input changes
+        function setupAutoGenerate() {
+            // Listen for year change
+            document.getElementById('yearStart').addEventListener('change', generateSchedule);
+            
+            // Listen for tenant count change (also regenerates inputs)
+            document.getElementById('tenantCount').addEventListener('change', () => {
+                generateTenantInputs();
+                // Add listeners to new inputs after they're created
+                setTimeout(() => {
+                    addTenantInputListeners();
+                    generateSchedule();
+                }, 10);
+            });
+        }
+
+        function addTenantInputListeners() {
+            const count = parseInt(document.getElementById('tenantCount').value);
+            for (let i = 0; i < count; i++) {
+                const input = document.getElementById(`tenant${i}`);
+                if (input) {
+                    input.addEventListener('input', generateSchedule);
+                }
+            }
+        }
+
         // Initialize
-        document.getElementById('tenantCount').addEventListener('change', generateTenantInputs);
         generateTenantInputs();
+        addTenantInputListeners();
+        setupAutoGenerate();
+        generateSchedule(); // Generate on page load
     </script>
 </body>
 </html>
